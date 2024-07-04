@@ -31,6 +31,8 @@ a. Cleaning mistyped data (null values, wrong types, etc.)
 b. Standardize spelling of company names
 c. Replacing common item names (ie. 5 ml syringe, 10 ml syringe will both be categorized under syringe)
 
+[Open SQL File](sql_files/final_query.sql)
+
 ```{r Loading Cleaned CSV, message=FALSE, warning=FALSE}
 # csv is this btw: manufacturer, item, quantity of item
 inventory_data <- read_csv("inventory_data/blueprints_cleaned_data.csv")
@@ -192,7 +194,7 @@ top_manufacturers <- top_data %>%
   top_n(8, Total_Manufacturer_Quantity) %>%
   pull(Manufacturer_Trimmed)
 
-# Filter data for only top 8 manufacturers and get top 5 items for each
+# Filter data for only top 8 manufacturers and get top 8 items for each
 final_data <- top_data %>%
   filter(Manufacturer_Trimmed %in% top_manufacturers) %>%
   group_by(Manufacturer_Trimmed) %>%
@@ -200,11 +202,10 @@ final_data <- top_data %>%
 
 # Generate plots for each manufacturer
 plot_list <- lapply(unique(final_data$Manufacturer_Trimmed), function(manufacturer) {
-  total_items <- sum(final_data$Total_Quantity)
   data <- final_data %>% filter(Manufacturer_Trimmed == manufacturer)
   ggplot(data, aes(x = reorder(item_display, Total_Quantity), y = Total_Quantity, fill = item_display)) +
     geom_col() +
-    labs(title = paste0(manufacturer, " (n= " ,total_items, ")"), x = "Item", y = "Total Quantity") +
+    labs(title = manufacturer, x = "Item", y = "Total Quantity") +
     theme_minimal() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none") +
     geom_text(aes(label = Total_Quantity, vjust = -0.3))
@@ -219,7 +220,7 @@ for (plot in plot_list) {
 
 ## Conclusion
 
-In conclusion, the case study for Blueprints has revealed significant inefficiencies in the current inventory management processes of the medical surplus recovery organization. The meticulous analysis of over 67,000 items and more than 2,000 data points highlighted the urgent need for standardized data entry and the consolidation of naming conventions to ensure accuracy and reliability in inventory tracking.
+In conclusion, the case study for Blueprints has revealed significant inefficiencies in the current inventory management processes of the medical surplus recovery organization. The analysis of over 67,000 items and more than 2,000 data points highlighted the urgent need for standardized data entry and the consolidation of naming conventions to ensure accuracy and reliability in inventory tracking.
 
 The findings underscore the challenges posed by open text responses and varied naming conventions, which have led to discrepancies in company categorization and item representation. These issues not only complicate the inventory process but also impede the organization's ability to swiftly and accurately assess resource distribution needs.
 
@@ -237,9 +238,5 @@ Hello! Thank you for going over my case study. Hope it helps and let me know if 
 
 <div align="center">
   <a href="https://www.linkedin.com/in/russell-day" style="flex: 0 0 auto;">LinkedIn</a>
-  <a href="https://www.linkedin.com/in/russell-day" style="flex: 0 0 auto;">LinkedIn</a>
+  <a href="https://github.com/Russell-Day/blueprints_inventory_case_study_07042024" style="flex: 0 0 auto;">GitHub Repository</a>
 </div>
-
-
-
-  
