@@ -1,0 +1,245 @@
+---
+title: "Blueprints Case Study"
+author: "Russell Day"
+date: "7/4/2024"
+output: html_document
+---
+
+```{r Loading Libraries, message=FALSE, warning=FALSE}
+# load necessarily libraries
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(gridExtra)
+```
+## Introduction
+
+Blueprints is a 501(c)(3) not-for-profit medical surplus recovery organization (MSRO) that provides sustainable solutions to inefficient health care resource distribution. Currently all the inventorying is done by hand in the warehouse and the inventory is being kept on a google spreadsheet. The goal of this case study is to clean up the current inventory data of over 67,000 items and 2,000+ data points. Then extract how frequent certain items appear, % of items come from X company, and of all the items from X company, what are the top three. The data from this case study will be used in a future project to help speed up the manual inventorying process potentially saving hundreds of hours of volunteer time.
+
+## Problems
+
+Current problems with the data set include the use of open text responses leading to companies being categorized under different names, items being misrepresented because of different naming conventions ie. Syringe vs Syringes making it hard to run any sort of reliable analysis on it. A majority of the time spent on this project will be on cleaning the data.
+
+## Solutions
+
+The case study will be tackled using a mix of SQL, spreadsheets, and R. SQL and spreadsheets to help clean the data and R for analysis and visualization.
+
+### 1. SQL / spreadsheets (may use some C++ to help)
+
+a. Cleaning mistyped data (null values, wrong types, etc.)
+b. Standardize spelling of company names
+c. Replacing common item names (ie. 5 ml syringe, 10 ml syringe will both be categorized under syringe)
+
+```{r Loading Cleaned CSV, message=FALSE, warning=FALSE}
+# csv is this btw: manufacturer, item, quantity of item
+inventory_data <- read_csv("inventory_data/blueprints_cleaned_data.csv")
+```
+```{r}
+head(inventory_data)
+summary(inventory_data)
+```
+### 2. R
+
+a. Data analysis
+    i. Averages
+    ii. Summary statistics
+
+b. Data visualization
+    i. Pie charts with % items (by company)
+    ii. Pie charts with % items (from X company pool)
+
+```{r top_items_and_top_manufacturers, echo=FALSE}
+# Basic bar plot of top 10 items by quantity
+top_10_items <- inventory_data %>%
+  group_by(item_display) %>%
+  summarize(Total_Quantity = sum(Total_Quantity)) %>%
+  top_n(10, Total_Quantity) %>%
+  arrange(desc(Total_Quantity))
+
+ggplot(top_10_items, aes(x = reorder(item_display, Total_Quantity), y = Total_Quantity)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  labs(title = "Top 10 Items by Quantity", x = "Item", y = "Total Quantity")
+
+# Pie chart of top manufacturers
+top_manufacturers <- inventory_data %>%
+  group_by(Manufacturer_Trimmed) %>%
+  summarize(Total_Quantity = sum(Total_Quantity)) %>%
+  top_n(5, Total_Quantity)
+
+ggplot(top_manufacturers, aes(x = "", y = Total_Quantity, fill = Manufacturer_Trimmed)) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar("y", start = 0) +
+  labs(title = "Top 5 Manufacturers by Quantity", fill = "Manufacturer") +
+  theme(
+    axis.text.x = element_blank(),  
+    axis.text.y = element_blank(),  
+    axis.ticks = element_blank(),   
+    axis.title.x = element_blank(), 
+    axis.title.y = element_blank()  
+  )
+```
+
+```{undefined warning=FALSE}
+# Summarize total quantity by manufacturer
+total_quantity_by_manufacturer <- inventory_data %>%
+  group_by(Manufacturer_Trimmed) %>%
+  summarise(Total_Quantity = sum(Total_Quantity, na.rm = TRUE)) %>%
+  arrange(desc(Total_Quantity))
+
+# Get top 20 manufacturers
+top_20_manufacturers <- head(total_quantity_by_manufacturer, 20)
+
+# Create the bar graph
+ggplot(top_20_manufacturers, aes(x = reorder(Manufacturer_Trimmed, -Total_Quantity), y = Total_Quantity, fill = Manufacturer_Trimmed)) +
+  geom_bar(stat = "identity", show.legend = FALSE) +
+  scale_fill_viridis_d() +
+  labs(title = "Top 20 Manufacturers by Total Quantity",
+       x = "Manufacturer",
+       y = "Total Quantity") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  geom_text(aes(label = ifelse(Manufacturer_Trimmed == top_20_manufacturers$Manufacturer_Trimmed, as.character(Total_Quantity), "")), vjust = -0.3)
+```
+
+```{r top_items_per_top_10_manufacturers, echo=FALSE, warning=FALSE}
+# Get top 10 manufacturers
+top_10_manufacturers <- inventory_data %>%
+  group_by(Manufacturer_Trimmed) %>%
+  summarize(Total_Quantity = sum(Total_Quantity)) %>%
+  top_n(10, Total_Quantity) %>%
+  pull(Manufacturer_Trimmed)
+
+# Filter data for top 10 manufacturers and get their top 10 items
+top_10_data <- inventory_data %>%
+  filter(Manufacturer_Trimmed %in% top_10_manufacturers) %>%
+  group_by(Manufacturer_Trimmed) %>%
+  mutate(Rank = rank(-Total_Quantity, ties.method = "first")) %>%
+  filter(Rank <= 3) %>%
+  ungroup()
+
+# Create the heatmap
+ggplot(top_10_data, aes(x = Manufacturer_Trimmed, y = reorder(item_display, Total_Quantity), fill = Total_Quantity)) +
+  geom_tile() +
+  scale_fill_gradient(low = "white", high = "steelblue", name = "Quantity") +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank()
+  ) +
+  labs(title = "Top 3 Items for Top 10 Manufacturers")
+
+```
+
+```{r warning=FALSE}
+# making pie charts for the top 8 manufacturers
+top_8_manufacturers <- inventory_data %>%
+  group_by(Manufacturer_Trimmed) %>%
+  summarize(Total_Quantity = sum(Total_Quantity)) %>%
+  top_n(8, Total_Quantity) %>%
+  pull(Manufacturer_Trimmed)
+
+top_8_data <- inventory_data %>%
+  filter(Manufacturer_Trimmed %in% top_8_manufacturers) %>%
+  group_by(Manufacturer_Trimmed) %>%
+  mutate(Rank = rank(-Total_Quantity, ties.method = "first")) %>%
+  filter(Rank <= 3) %>%
+  ungroup()
+
+# Function to create a pie chart for a single manufacturer
+create_pie_chart <- function(data, manufacturer) {
+  total_items <- sum(data$Total_Quantity)
+
+  ggplot(data, aes(x = "", y = Total_Quantity, fill = item_display)) +
+    geom_bar(stat = "identity", width = 1) +
+    coord_polar("y", start = 0) +
+    theme_void() +
+    theme(
+      legend.position = "none",
+      plot.title = element_text(size = 10, hjust = 0.5)
+    ) +
+    ggtitle(paste0(manufacturer, " (n = ", total_items, ")")) +
+    geom_text(aes(label = item_display), position = position_stack(vjust = 0.7), size = 3)
+}
+
+# Create pie charts for each manufacturer
+pie_charts <- lapply(top_8_manufacturers, function(manufacturer) {
+  manufacturer_data <- top_8_data %>% 
+    filter(Manufacturer_Trimmed == manufacturer) %>%
+    arrange(desc(Total_Quantity)) %>%
+    top_n(5, Total_Quantity)  # Limiting to top 5 for better readability
+  create_pie_chart(manufacturer_data, manufacturer)
+})
+
+# Arrange pie charts in a grid
+pie_chart_grid <- do.call(grid.arrange, c(pie_charts, ncol = 4))
+```
+```{r warning=FALSE}
+# Calculate total quantities and determine top manufacturers and items
+top_data <- inventory_data %>%
+  group_by(Manufacturer_Trimmed, item_display) %>%
+  summarise(Total_Quantity = sum(Total_Quantity), .groups = 'drop') %>%
+  arrange(desc(Total_Quantity))
+
+# Get top 8 manufacturers by overall quantity
+top_manufacturers <- top_data %>%
+  group_by(Manufacturer_Trimmed) %>%
+  summarise(Total_Manufacturer_Quantity = sum(Total_Quantity)) %>%
+  top_n(8, Total_Manufacturer_Quantity) %>%
+  pull(Manufacturer_Trimmed)
+
+# Filter data for only top 8 manufacturers and get top 5 items for each
+final_data <- top_data %>%
+  filter(Manufacturer_Trimmed %in% top_manufacturers) %>%
+  group_by(Manufacturer_Trimmed) %>%
+  slice_max(order_by = Total_Quantity, n = 8)
+
+# Generate plots for each manufacturer
+plot_list <- lapply(unique(final_data$Manufacturer_Trimmed), function(manufacturer) {
+  total_items <- sum(final_data$Total_Quantity)
+  data <- final_data %>% filter(Manufacturer_Trimmed == manufacturer)
+  ggplot(data, aes(x = reorder(item_display, Total_Quantity), y = Total_Quantity, fill = item_display)) +
+    geom_col() +
+    labs(title = paste0(manufacturer, " (n= " ,total_items, ")"), x = "Item", y = "Total Quantity") +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none") +
+    geom_text(aes(label = Total_Quantity, vjust = -0.3))
+})
+
+for (plot in plot_list) {
+  print(plot)
+}
+
+```
+
+
+## Conclusion
+
+In conclusion, the case study for Blueprints has revealed significant inefficiencies in the current inventory management processes of the medical surplus recovery organization. The meticulous analysis of over 67,000 items and more than 2,000 data points highlighted the urgent need for standardized data entry and the consolidation of naming conventions to ensure accuracy and reliability in inventory tracking.
+
+The findings underscore the challenges posed by open text responses and varied naming conventions, which have led to discrepancies in company categorization and item representation. These issues not only complicate the inventory process but also impede the organization's ability to swiftly and accurately assess resource distribution needs.
+
+## Next Steps
+
+Next steps for our inventory process would be creating a more standardized way of categorizing our items. From the app design team, this data will help to quicken the process of sorting by creating a drop down menu that will change based off of the data collected here. 
+
+## Thanks for reading!
+
+<div align="center">
+  <img src="assets/DSCF4941.jpg" style="width: 25%; height: auto; border-radius: 25px;" />
+</div>
+
+Hello! Thank you for going over my case study. Hope it helps and let me know if you want any specific details or if you have any issues with it.
+
+<div align="center">
+  <a href="https://www.linkedin.com/in/russell-day" style="flex: 0 0 auto;">LinkedIn</a>
+  <a href="https://www.linkedin.com/in/russell-day" style="flex: 0 0 auto;">LinkedIn</a>
+</div>
+
+
+
+  
