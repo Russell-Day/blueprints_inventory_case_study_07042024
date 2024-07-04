@@ -10,6 +10,8 @@ The goal of this study is to help speed up the inventorying process by creating 
 
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. You can also just click on the html file if you would like to just see the results and do not need to run it for yourself.
 
+[The case study as an HTML file.](https://russell-day.github.io/blueprints_inventory_case_study_07042024/index.html)
+
 ### Dependencies
 
 - RStudio
