@@ -237,6 +237,6 @@ Next steps for our inventory process would be creating a more standardized way o
 Hello! Thank you for going over my case study. Hope it helps and let me know if you want any specific details or if you have any issues with it.
 
 <div align="center">
-  <a href="https://www.linkedin.com/in/russell-day" style="flex: 0 0 auto;">LinkedIn</a>
-  <a href="https://github.com/Russell-Day/blueprints_inventory_case_study_07042024" style="flex: 0 0 auto;">GitHub Repository</a>
+  <a href="https://www.linkedin.com/in/russell-day" style="flex: 0 0 auto; target: _blank; padding-right: 10px;">LinkedIn</a>
+  <a href="https://github.com/Russell-Day/blueprints_inventory_case_study_07042024" style="flex: 0 0 auto; target: _blank; padding-left: 10px;">GitHub Repository</a>
 </div>
