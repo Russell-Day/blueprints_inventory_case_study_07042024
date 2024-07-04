@@ -4,7 +4,7 @@
 
 ## Description
 
-The goal of this study is to help speed up the inventorying process by creating a list of the most common items and most common manufacturers that is given to us from donations. Also a little bit to help me hone my SQL and R skills for data aggregation and visualization.
+The goal of this study is to help speed up the inventorying process by creating a list of the most common items and most common manufacturers that is given to us from donations. Also a little bit to help me hone my SQL and R skills for data aggregation and visualization. This is my first case study and did play around with the visualizations.
 
 ## Getting Started
 
