@@ -226,7 +226,7 @@ The findings underscore the challenges posed by open text responses and varied n
 
 ## Next Steps
 
-Next steps for our inventory process would be creating a more standardized way of categorizing our items. From the app design team, this data will help to quicken the process of sorting by creating a drop down menu that will change based off of the data collected here. 
+Next steps for our inventory process would be creating a more standardized way of categorizing our items. From the app design team, this data will help to quicken the process of sorting by creating a drop down menu that will change based off of the data collected here. Another would be tackling this problem not solely on the volume of the incoming items, but instead the number of times each item pops up as an incoming entry.
 
 ## Thanks for reading!
 
